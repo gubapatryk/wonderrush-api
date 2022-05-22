@@ -1,0 +1,9 @@
+uvicorn[standard]
+gunicorn
+fastapi
+aiofiles
+python-jose
+passlib
+python-multipart
+Jinja2
+python-magic
