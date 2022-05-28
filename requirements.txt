@@ -7,3 +7,6 @@ passlib
 python-multipart
 Jinja2
 python-magic
+starlette
+nest_asyncio
+perlin-noise
