@@ -163,6 +163,7 @@ def update(room_id: str):
     
         return {
             "winner" : app.s.room_dict[room_id].winner,
+            "player_number" : app.s.room_dict[room_id].player_number,
             "items" : app.s.room_dict[room_id].items
         }
     else:
