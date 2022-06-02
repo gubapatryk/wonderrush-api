@@ -6,10 +6,10 @@ import asyncio
 import random
 
 app = FastAPI()
-MAP_SIZE_X = 9
-MAP_SIZE_Y = 9
+MAP_SIZE_X = 20
+MAP_SIZE_Y = 8
 ITEMS_TYPES = 3
-MAX_SPAWNED = 10
+MAX_SPAWNED = 9
 
 class BackgroundRunner:
     def __init__(self):
@@ -66,7 +66,7 @@ class Room:
         self.tick = 0
         self.door_size = 10
         self.player_dict = {}
-        self.winner = ""
+        self.winner = "*"
         self.map_tiles = None
         self.items = []
 
@@ -96,16 +96,28 @@ class Room:
         return True
 
     def add_item(self):
-        for x in range(10):
-            x = random.randint(0, MAP_SIZE_X)
-            y = random.randint(0, MAP_SIZE_Y)
-            id = random.randint(1, ITEMS_TYPES)
-            if self.check_if_tile_free(x,y):
-                break
-            if x == 9:
-                return
-        item = Item(x,y,id)
-        self.items.append(item)
+        if len(self.items) < MAX_SPAWNED:
+            for x in range(10):
+                x = random.randint(0, MAP_SIZE_X)
+                y = random.randint(0, MAP_SIZE_Y)
+                los = random.randint(1, ITEMS_TYPES*2)
+                if los > 2:
+                    id = 3
+                else:
+                    id = los
+                if self.check_if_tile_free(x,y):
+                    break
+                if x == 9:
+                    return
+            item = Item(x,y,id)
+            self.items.append(item)
+
+    def items_to_string(self):
+        tekst = ""
+        for it in self.items:
+            tekst = tekst + ":" + str(it.x) + "-" + str(it.y) + "-" + str(it.id)
+        return tekst
+        
 
     def update_level(self):
         self.tick += 1
@@ -117,9 +129,10 @@ class Room:
         return False
             
     def add_player(self, player_id : str):
-        if len(self.player_dict) < 3 and self.check_if_player_exists_in_room(player_id):
-            self.player_dict[player_id] = Player()
-            self.player_number += 1
+        self.player_number += 1
+        #if len(self.player_dict) < 3 and self.check_if_player_exists_in_room(player_id):
+        #    self.player_dict[player_id] = Player()
+        #    self.player_number += 1
 
 app.s = Server()
 
@@ -130,13 +143,11 @@ def root():
 @app.get("/join/{room_id}/{player_id}")
 def join_room(room_id: str, player_id: str):
     if room_id in app.s.room_dict:
-        if app.s.room_dict[room_id].player_number == 1:
-            app.s.room_dict[room_id].add_player(player_id)
-            return True
-        return False
+        app.s.room_dict[room_id].add_player(player_id)
+        return True
     else:
         app.s.create_room(room_id)
-        app.s.room_dict[room_id].create_map()
+        #app.s.room_dict[room_id].create_map()
         app.s.room_dict[room_id].add_player(player_id)
         return True
 
@@ -161,11 +172,7 @@ def update(room_id: str):
     if room_id in app.s.room_dict:
         app.s.room_dict[room_id].update_level()
     
-        return {
-            "winner" : app.s.room_dict[room_id].winner,
-            "player_number" : app.s.room_dict[room_id].player_number,
-            "items" : app.s.room_dict[room_id].items
-        }
+        return app.s.room_dict[room_id].winner + ":" + str(app.s.room_dict[room_id].player_number) + app.s.room_dict[room_id].items_to_string()
     else:
         return False
 
